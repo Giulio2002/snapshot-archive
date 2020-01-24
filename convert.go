@@ -9,9 +9,9 @@ import (
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ledgerwatch/turbo-geth/common/dbutils"
+	"github.com/ledgerwatch/turbo-geth/common/debug"
 	"github.com/ledgerwatch/turbo-geth/core/types/accounts"
 	"github.com/ledgerwatch/turbo-geth/crypto"
-	"github.com/ledgerwatch/turbo-geth/common/debug"
 	"github.com/ledgerwatch/turbo-geth/ethdb"
 )
 
@@ -37,7 +37,7 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		gethAccount := state.Account{} // go-ethereum account
 		var tAccount accounts.Account  // turbo-geth account
 
-		if counter == maxOperationsPerTransaction {
+		if counter > maxOperationsPerTransaction {
 			_, err := mut.Commit()
 			return iterator.Key, err
 		}
