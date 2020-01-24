@@ -11,3 +11,14 @@ func NewTurboDatabase(db ethdb.BoltDatabase) TurboDatabase {
 		db: db,
 	}
 }
+
+func NewTurboDatabaseFromChainData(chaindata string) (TurboDatabase, error) {
+	db, err := ethdb.NewBoltDatabase(chaindata)
+	if err != nil {
+		return TurboDatabase{}, err
+	}
+
+	return TurboDatabase{
+		db: *db,
+	}, nil
+}
