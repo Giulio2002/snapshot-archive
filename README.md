@@ -21,6 +21,6 @@ for testing
 ```
     --chaindata path to go-ethereum's chaindata
     --out the resultant boltDB output
-    --maxOperationPerTransaction max operation per tx in boltDB (PUT operations)
+    --max-operations-per-transaction max operation per tx in boltDB (PUT operations)
     --block-number the number of the block we need to take the snapshot from
 ```
