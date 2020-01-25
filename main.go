@@ -31,10 +31,11 @@ func main() {
 	var freezer = flag.String("freezer", "", "path to go-ethereum's freezer")
 	var out = flag.String("out", "out", "output path")
 	var max = flag.Uint("max-operations-per-transaction", 100000, "the number of operations per transaction in DB")
+	var cache = flag.Int("cache", 16, "max cache usage")
 	var IblockNumber = flag.Int64("block-number", -1, "block number") // replace 0 with latest
 
 	flag.Parse()
-	leveldDB, err := NewEthereumDatabaseFromChainData(*chaindata, *freezer)
+	leveldDB, err := NewEthereumDatabaseFromChainData(*chaindata, *freezer, *cache)
 	if err != nil {
 		fmt.Printf("Cannot initialise ethereum database: %s\n", err.Error())
 		return

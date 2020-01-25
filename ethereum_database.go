@@ -16,12 +16,12 @@ func NewEthereumDatabase(db ethdb.KeyValueStore) EthereumDatabase {
 	}
 }
 
-func NewEthereumDatabaseFromChainData(chaindata string, freezer string) (EthereumDatabase, error) {
+func NewEthereumDatabaseFromChainData(chaindata string, freezer string, cache int) (EthereumDatabase, error) {
 	handles, err := makeDatabaseHandles()
 	if err != nil {
 		return EthereumDatabase{}, err
 	}
-	db, err := rawdb.NewLevelDBDatabaseWithFreezer(chaindata, 0, handles, freezer, "")
+	db, err := rawdb.NewLevelDBDatabaseWithFreezer(chaindata, cache, handles, freezer, "")
 	if err != nil {
 		return EthereumDatabase{}, err
 	}
