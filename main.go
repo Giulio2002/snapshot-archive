@@ -26,6 +26,8 @@ func main() {
 	ostream = log.StreamHandler(output, log.TerminalFormat(usecolor))
 	glogger = log.NewGlogHandler(ostream)
 	log.Root().SetHandler(glogger)
+	glogger.Verbosity(log.LvlInfo)
+
 	// Command
 	var chaindata = flag.String("chaindata", "", "path to go-ethereum's chaindata")
 	var freezer = flag.String("freezer", "", "path to go-ethereum's freezer")
