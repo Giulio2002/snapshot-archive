@@ -10,6 +10,8 @@ require (
 	github.com/elastic/gosigar v0.10.5 // indirect
 	github.com/ethereum/go-ethereum v1.9.10
 	github.com/ledgerwatch/turbo-geth v0.0.0-20200121205020-cfb7fe0d9dcc
+	github.com/mattn/go-colorable v0.1.2
+	github.com/mattn/go-isatty v0.0.9
 	github.com/pkg/errors v0.9.1 // indirect
 	golang.org/x/crypto v0.0.0-20200117160349-530e935923ad // indirect
 	golang.org/x/net v0.0.0-20200114155413-6afb5195e5aa // indirect
