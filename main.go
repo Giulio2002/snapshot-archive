@@ -9,7 +9,7 @@ func main() {
 	var chaindata = flag.String("chaindata", "", "path to go-ethereum's chaindata")
 	var out = flag.String("out", "out", "output path")
 	var max = flag.Uint("max-operations-per-transaction", 100000, "the number of operations per transaction in DB")
-	var blockNumber = flag.Uint64("block-number", 0, "block number") // replace 0 with latest
+	var blockNumber = flag.Uint64("block-number", 1, "block number") // replace 0 with latest
 	flag.Parse()
 
 	if *chaindata == "" {

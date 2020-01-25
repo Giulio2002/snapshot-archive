@@ -19,7 +19,7 @@ var emptyCodeHash = crypto.Keccak256Hash(nil)
 var emptyRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421").Bytes()
 
 func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxOperationsPerTransaction uint, blockNumber uint64) ([]byte, uint, error) {
-	t, blockchain, err := newStateTrie(from, blockNumber)
+	t, blockchain, err := newStateTrie(from, blockNumber-1)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -49,17 +49,20 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		// Decode geth account
 		err := rlp.Decode(bytes.NewBuffer(iterator.Value), &gethAccount)
 		if err != nil {
+			_, _ = mut.Commit()
 			return nil, counter, err
 		}
 		// Storage Bucket
 		storageTrie, err := trie.New(gethAccount.Root, trieDB)
 		if err != nil {
+			_, _ = mut.Commit()
 			return nil, counter, err
 		}
 
 		err, isContract := makeStorage(mut, storageTrie, iterator.Key, &counter)
 
 		if err != nil {
+			_, _ = mut.Commit()
 			return nil, counter, err
 		}
 		if isContract {
@@ -69,14 +72,16 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 			err := makeCode(mut, from, stateDB, iterator.Key)
 			counter++
 			if err != nil {
+				_, _ = mut.Commit()
 				return nil, counter, err
 			}
 			if debug.IsThinHistory() {
 				err := makeContractCode(mut, from, tAccount, stateDB, iterator.Key)
+				counter++
 				if err != nil {
+					_, _ = mut.Commit()
 					return nil, counter, err
 				}
-				counter++
 			}
 		} else {
 			tAccount.Incarnation = 0
@@ -87,11 +92,12 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		bytesAccount := make([]byte, tAccount.EncodingLengthForStorage())
 		tAccount.EncodeForStorage(bytesAccount)
 
+		counter++
 		err = mut.Put(dbutils.AccountsBucket, iterator.Key, bytesAccount)
 		if err != nil {
+			_, _ = mut.Commit()
 			return nil, counter, err
 		}
-		counter++
 	}
 	_, err = mut.Commit()
 	return nil, counter, err
