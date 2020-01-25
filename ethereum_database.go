@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/ethdb"
+	"github.com/ethereum/go-ethereum/ethdb/leveldb"
 )
 
 type EthereumDatabase struct {
@@ -15,8 +16,9 @@ func NewEthereumDatabase(db ethdb.KeyValueStore) EthereumDatabase {
 	}
 }
 
-func NewEthereumDatabaseFromChainData(chaindata string) (EthereumDatabase, error) {
-	db, err := rawdb.NewLevelDBDatabaseWithFreezer(chaindata, 0, 0, "", "")
+func NewEthereumDatabaseFromChainData(chaindata string, freezer string) (EthereumDatabase, error) {
+	lvldb, err := leveldb.New(chaindata, 0, 0, "")
+	db, err := rawdb.NewDatabaseWithFreezer(lvldb, freezer, "")
 	if err != nil {
 		return EthereumDatabase{}, err
 	}
