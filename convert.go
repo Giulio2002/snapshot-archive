@@ -4,7 +4,11 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/consensus/ethash"
+	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
+	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ledgerwatch/turbo-geth/common/dbutils"
@@ -19,7 +23,7 @@ var emptyCodeHash = crypto.Keccak256Hash(nil)
 var emptyRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421").Bytes()
 
 func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxOperationsPerTransaction uint, blockNumber uint64) ([]byte, uint, error) {
-	t, blockchain, err := newStateTrie(from, blockNumber-1)
+	t, blockchain, err := newStateTrie(from, blockNumber)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -145,4 +149,14 @@ func getAddress(from EthereumDatabase, preimage []byte) (common.Address, error) 
 func getAddressHash(from EthereumDatabase, preimage []byte) (common.Hash, error) {
 	addressBytes, err := from.db.Get(append(preimagePrefix, preimage...))
 	return common.BytesToHash(addressBytes), err
+}
+
+func getBlockNumber(db EthereumDatabase) (uint64, error) {
+	rawDb := rawdb.NewDatabase(db.db)
+	blockchain, err := core.NewBlockChain(rawDb, nil, nil, ethash.NewFaker(), vm.Config{}, nil)
+	if err != nil {
+		return 0, err
+	}
+	block := blockchain.CurrentBlock()
+	return block.NumberU64(), nil
 }

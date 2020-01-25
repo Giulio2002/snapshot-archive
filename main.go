@@ -30,11 +30,12 @@ func main() {
 	var chaindata = flag.String("chaindata", "", "path to go-ethereum's chaindata")
 	var out = flag.String("out", "out", "output path")
 	var max = flag.Uint("max-operations-per-transaction", 100000, "the number of operations per transaction in DB")
-	var blockNumber = flag.Uint64("block-number", 1, "block number") // replace 0 with latest
-	flag.Parse()
+	var IblockNumber = flag.Int64("block-number", -1, "block number") // replace 0 with latest
 
-	if *chaindata == "" {
-		fmt.Println("--chaindata can't be nothing")
+	flag.Parse()
+	leveldDB, err := NewEthereumDatabaseFromChainData(*chaindata)
+	if err != nil {
+		fmt.Println("Cannot initialise ethereum database")
 		return
 	}
 
@@ -43,20 +44,31 @@ func main() {
 		fmt.Println("Cannot initialise bolt database")
 		return
 	}
-	leveldDB, err := NewEthereumDatabaseFromChainData(*chaindata)
-	if err != nil {
-		fmt.Println("Cannot initialise ethereum database")
+	var blockNumber uint64
+	if *IblockNumber == -1 {
+		blockNumber, err = getBlockNumber(leveldDB)
+		if err != nil {
+			fmt.Println("Cannot read block number")
+			return
+		}
+		fmt.Printf("Latest Block Number: %d\n", blockNumber)
+	} else {
+		blockNumber = uint64(*IblockNumber)
+	}
+
+	if *chaindata == "" {
+		fmt.Println("--chaindata can't be nothing")
 		return
 	}
 
-	newKey, written, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, *blockNumber)
+	newKey, written, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, blockNumber)
 	if err != nil {
 		fmt.Printf("Written: %d entries\n", written)
 		fmt.Printf("Convert Operation Failed: %s \n", err.Error())
 		return
 	}
 	for newKey != nil {
-		k, wrote, err := ConvertSnapshot(leveldDB, boltDB, newKey, *max, *blockNumber)
+		k, wrote, err := ConvertSnapshot(leveldDB, boltDB, newKey, *max, blockNumber)
 		newKey = k
 		written += wrote
 		if err != nil {
