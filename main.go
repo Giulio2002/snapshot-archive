@@ -28,20 +28,23 @@ func main() {
 		return
 	}
 
-	newKey, counter, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, *blockNumber)
+	newKey, written, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, *blockNumber)
 	if err != nil {
-		fmt.Printf("Written: %d entries\n", counter)
+		fmt.Printf("Written: %d entries\n", written)
 		fmt.Printf("Convert Operation Failed: %s \n", err.Error())
 		return
 	}
 	for newKey != nil {
-		newKey, counter, err = ConvertSnapshot(leveldDB, boltDB, newKey, *max, *blockNumber)
+		k, wrote, err := ConvertSnapshot(leveldDB, boltDB, newKey, *max, *blockNumber)
+		newKey = k
+		written += wrote
 		if err != nil {
-			fmt.Printf("Written: %d entries\n", counter)
+			fmt.Printf("Written: %d entries\n", written)
 			fmt.Printf("Convert Operation Failed: %s \n", err.Error())
 			return
 		}
 	}
+	fmt.Printf("Written: %d entries\n", written)
 	fmt.Println("Snapshot converted")
 	return
 }

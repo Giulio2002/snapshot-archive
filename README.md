@@ -1,6 +1,6 @@
 ## Snapshot Archive
 
-This program allows to convert a snapshot at a certain from a geth database and convert into in turbo-geth format so that it can be reused without downloading the blockchain twice.
+This program allows to convert a snapshot at a certain block from a geth database and convert into in turbo-geth format so that it can be reused without downloading the blockchain twice.
 
 ## Build
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/state"
@@ -95,7 +94,6 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		counter++
 	}
 	_, err = mut.Commit()
-	fmt.Println(counter)
 	return nil, counter, err
 }
 
