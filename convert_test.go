@@ -18,14 +18,14 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb/memorydb"
+	"github.com/ethereum/go-ethereum/ethdb/leveldb"
 	"github.com/ethereum/go-ethereum/params"
 )
 
 func TestConvert(t *testing.T) {
 	var (
 		boltDB   = ethdb.NewMemDatabase()
-		memDb    = memorydb.New()
+		memDb, _ = leveldb.New("test", 0, 0, "")
 		db       = rawdb.NewDatabase(memDb)
 		key, _   = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key1, _  = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
@@ -208,7 +208,9 @@ func TestConvert(t *testing.T) {
 	}
 	ethereumDB := NewEthereumDatabase(memDb)
 	turboDB := NewTurboDatabase(*boltDB)
-	_, err = ConvertSnapshot(ethereumDB, turboDB, nil, 1000, 7)
+	newKey, _, err := ConvertSnapshot(ethereumDB, turboDB, nil, 1, 7)
+	_ = newKey
+	newKey, _, err = ConvertSnapshot(ethereumDB, turboDB, []byte{1, 3, 5}, 1, 7)
 	if err != nil {
 		t.Error(err)
 	}
