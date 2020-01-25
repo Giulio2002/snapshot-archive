@@ -208,9 +208,7 @@ func TestConvert(t *testing.T) {
 	}
 	ethereumDB := NewEthereumDatabase(memDb)
 	turboDB := NewTurboDatabase(*boltDB)
-	newKey, _, err := ConvertSnapshot(ethereumDB, turboDB, nil, 1, 7)
-	_ = newKey
-	newKey, _, err = ConvertSnapshot(ethereumDB, turboDB, []byte{1, 3, 5}, 1, 7)
+	_, _, err = ConvertSnapshot(ethereumDB, turboDB, nil, 1000, 7)
 	if err != nil {
 		t.Error(err)
 	}
