@@ -52,11 +52,7 @@ func main() {
 	}
 	var blockNumber uint64
 	if *IblockNumber == -1 {
-		blockNumber, err = getBlockNumber(leveldDB)
-		if err != nil {
-			log.Error("Cannot read block number", "err", err.Error())
-			return
-		}
+		blockNumber = getBlockNumber(leveldDB)
 		log.Info("Latest Block Number", "block", blockNumber)
 	} else {
 		blockNumber = uint64(*IblockNumber)

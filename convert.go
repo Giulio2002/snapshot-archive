@@ -4,11 +4,8 @@ import (
 	"bytes"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/consensus/ethash"
-	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
-	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
@@ -144,12 +141,7 @@ func getAddressHash(from EthereumDatabase, preimage []byte) (common.Hash, error)
 	return common.BytesToHash(addressBytes), err
 }
 
-func getBlockNumber(db EthereumDatabase) (uint64, error) {
-	rawDb := rawdb.NewDatabase(db.db)
-	blockchain, err := core.NewBlockChain(rawDb, nil, nil, ethash.NewFaker(), vm.Config{}, nil)
-	if err != nil {
-		return 0, err
-	}
-	block := blockchain.CurrentBlock()
-	return block.NumberU64(), nil
+func getBlockNumber(db EthereumDatabase) uint64 {
+	hash := rawdb.ReadHeadBlockHash(db.db)
+	return *rawdb.ReadHeaderNumber(db.db, hash)
 }
