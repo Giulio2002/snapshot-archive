@@ -214,10 +214,9 @@ func TestConvert(t *testing.T) {
 	rawDB := rawdb.NewDatabase(ethereumDB.db)
 	trieDB := trie.NewDatabase(ethereumDB.db)
 	blockTrie, root, _ := newStateTrie(ethereumDB, 7)
-	iterator := trie.NewIterator(blockTrie.NodeIterator(nil))
 	stateDB, _ := state.New(root, state.NewDatabase(rawDB))
 
-	_, err = ConvertSnapshot(ethereumDB, turboDB, iterator, 1000, trieDB, stateDB, blockTrie, mut)
+	_, _, err = ConvertSnapshot(ethereumDB, turboDB, nil, 1000, trieDB, stateDB, blockTrie, mut)
 	if err != nil {
 		t.Error(err)
 	}
