@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
@@ -10,6 +9,7 @@ import (
 	"github.com/ethereum/go-ethereum/core/rawdb"
 	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/vm"
+	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rlp"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/ledgerwatch/turbo-geth/common/dbutils"
@@ -95,7 +95,7 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Ite
 		}
 	}
 	_, err := mut.Commit()
-	fmt.Printf("%d entries has just been written\n", counter)
+	log.Info("entries has just been written", "entries", counter)
 	return counter, err
 }
 

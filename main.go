@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"os"
 
@@ -42,29 +41,29 @@ func main() {
 	flag.Parse()
 	leveldDB, err := NewEthereumDatabaseFromChainData(*chaindata, *freezer, *cache)
 	if err != nil {
-		fmt.Printf("Cannot initialise ethereum database: %s\n", err.Error())
+		log.Error("Cannot initialise ethereum database", "err", err.Error())
 		return
 	}
 
 	boltDB, err := NewTurboDatabaseFromChainData(*out)
 	if err != nil {
-		fmt.Println("Cannot initialise bolt database")
+		log.Error("Cannot initialise bolt database", "err", err.Error())
 		return
 	}
 	var blockNumber uint64
 	if *IblockNumber == -1 {
 		blockNumber, err = getBlockNumber(leveldDB)
 		if err != nil {
-			fmt.Println("Cannot read block number")
+			log.Error("Cannot read block number", "err", err.Error())
 			return
 		}
-		fmt.Printf("Latest Block Number: %d\n", blockNumber)
+		log.Info("Latest Block Number", "block", blockNumber)
 	} else {
 		blockNumber = uint64(*IblockNumber)
 	}
 
 	if *chaindata == "" {
-		fmt.Println("--chaindata can't be nothing")
+		log.Error("--chaindata can't be nothing")
 		return
 	}
 
@@ -73,32 +72,32 @@ func main() {
 	trieDB := trie.NewDatabase(leveldDB.db)
 	t, root, err := newStateTrie(leveldDB, blockNumber)
 	if err != nil {
-		fmt.Printf("Could not retrieve state trie: %s", err.Error())
+		log.Error("Could not retrieve state trie", "err", err.Error())
 		return
 	}
 	iterator := trie.NewIterator(t.NodeIterator(nil))
 	stateDB, err := state.New(root, state.NewDatabase(rawDB))
 	if err != nil {
-		fmt.Printf("Could not retrieve state trie: %s", err.Error())
+		log.Info("Could not retrieve state trie", "err", err.Error())
 		return
 	}
 
 	written, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
 	if err != nil {
-		fmt.Printf("Written: %d entries\n", written)
-		fmt.Printf("Convert Operation Failed: %s \n", err.Error())
+		log.Info("Written", "entries", written)
+		log.Error("Convert Operation Failed", "err", err.Error())
 		return
 	}
 	for iterator.Key != nil {
 		wrote, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
 		written += wrote
 		if err != nil {
-			fmt.Printf("Written: %d entries\n", written)
-			fmt.Printf("Convert Operation Failed: %s \n", err.Error())
+			log.Info("Written", "entries", written)
+			log.Error("Convert Operation Failed", "err", err.Error())
 			return
 		}
 	}
-	fmt.Printf("Written: %d entries\n", written)
-	fmt.Println("Snapshot converted")
+	log.Info("Written", "entries", written)
+	log.Info("Snapshot converted")
 	return
 }
