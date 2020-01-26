@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/consensus/ethash"
@@ -22,19 +23,9 @@ var preimagePrefix = []byte("secure-key-")
 var emptyCodeHash = crypto.Keccak256Hash(nil)
 var emptyRoot = common.HexToHash("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421").Bytes()
 
-func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxOperationsPerTransaction uint, blockNumber uint64) ([]byte, uint, error) {
-	t, blockchain, err := newStateTrie(from, blockNumber)
-	if err != nil {
-		return nil, 0, err
-	}
-	iterator := trie.NewIterator(t.NodeIterator(start))
+func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Iterator, maxOperationsPerTransaction uint, trieDB *trie.Database, stateDB *state.StateDB, t *trie.Trie, mut ethdb.DbWithPendingMutations) (uint, error) {
+
 	var counter uint
-	mut := to.db.NewBatch()
-	trieDB := trie.NewDatabase(from.db)
-	stateDB, err := blockchain.State()
-	if err != nil {
-		return nil, 0, err
-	}
 
 	for iterator.Next() {
 		gethAccount := state.Account{} // go-ethereum account
@@ -42,7 +33,7 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 
 		if counter > maxOperationsPerTransaction {
 			_, err := mut.Commit()
-			return iterator.Key, counter, err
+			return counter, err
 		}
 
 		// setup account
@@ -54,20 +45,20 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		err := rlp.Decode(bytes.NewBuffer(iterator.Value), &gethAccount)
 		if err != nil {
 			_, _ = mut.Commit()
-			return nil, counter, err
+			return counter, err
 		}
 		// Storage Bucket
 		storageTrie, err := trie.New(gethAccount.Root, trieDB)
 		if err != nil {
 			_, _ = mut.Commit()
-			return nil, counter, err
+			return counter, err
 		}
 
 		err, isContract := makeStorage(mut, storageTrie, iterator.Key, &counter)
 
 		if err != nil {
 			_, _ = mut.Commit()
-			return nil, counter, err
+			return counter, err
 		}
 		if isContract {
 			tAccount.Root.SetBytes(gethAccount.Root.Bytes())
@@ -77,14 +68,14 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 			counter++
 			if err != nil {
 				_, _ = mut.Commit()
-				return nil, counter, err
+				return counter, err
 			}
 			if debug.IsThinHistory() {
 				err := makeContractCode(mut, from, tAccount, stateDB, iterator.Key)
 				counter++
 				if err != nil {
 					_, _ = mut.Commit()
-					return nil, counter, err
+					return counter, err
 				}
 			}
 		} else {
@@ -100,11 +91,12 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, start []byte, maxO
 		err = mut.Put(dbutils.AccountsBucket, iterator.Key, bytesAccount)
 		if err != nil {
 			_, _ = mut.Commit()
-			return nil, counter, err
+			return counter, err
 		}
 	}
-	_, err = mut.Commit()
-	return nil, counter, err
+	_, err := mut.Commit()
+	fmt.Printf("%d entries has just been written", counter)
+	return counter, err
 }
 
 func makeStorage(mut ethdb.DbWithPendingMutations, t *trie.Trie, accountKey []byte, counter *uint) (error, bool) {

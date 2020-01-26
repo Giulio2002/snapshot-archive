@@ -6,7 +6,10 @@ import (
 	"io"
 	"os"
 
+	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/log"
+	"github.com/ethereum/go-ethereum/trie"
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 )
@@ -65,15 +68,29 @@ func main() {
 		return
 	}
 
-	newKey, written, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, blockNumber)
+	mut := boltDB.db.NewBatch()
+	rawDB := rawdb.NewDatabase(leveldDB.db)
+	trieDB := trie.NewDatabase(leveldDB.db)
+	t, root, err := newStateTrie(leveldDB, blockNumber)
+	if err != nil {
+		fmt.Printf("Could not retrieve state trie: %s", err.Error())
+		return
+	}
+	iterator := trie.NewIterator(t.NodeIterator(nil))
+	stateDB, err := state.New(root, state.NewDatabase(rawDB))
+	if err != nil {
+		fmt.Printf("Could not retrieve state trie: %s", err.Error())
+		return
+	}
+
+	written, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
 	if err != nil {
 		fmt.Printf("Written: %d entries\n", written)
 		fmt.Printf("Convert Operation Failed: %s \n", err.Error())
 		return
 	}
-	for newKey != nil {
-		k, wrote, err := ConvertSnapshot(leveldDB, boltDB, newKey, *max, blockNumber)
-		newKey = k
+	for iterator.Key != nil {
+		wrote, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
 		written += wrote
 		if err != nil {
 			fmt.Printf("Written: %d entries\n", written)

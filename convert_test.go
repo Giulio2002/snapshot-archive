@@ -15,17 +15,19 @@ import (
 	"github.com/ethereum/go-ethereum/consensus/ethash"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/rawdb"
+	"github.com/ethereum/go-ethereum/core/state"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/ethdb/leveldb"
+	"github.com/ethereum/go-ethereum/ethdb/memorydb"
 	"github.com/ethereum/go-ethereum/params"
+	"github.com/ethereum/go-ethereum/trie"
 )
 
 func TestConvert(t *testing.T) {
 	var (
 		boltDB   = ethdb.NewMemDatabase()
-		memDb, _ = leveldb.New("test", 0, 0, "")
+		memDb    = memorydb.New()
 		db       = rawdb.NewDatabase(memDb)
 		key, _   = crypto.HexToECDSA("b71c71a67e1177ad4e901695e1b4b9ee17ae16c6668d313eac2f96dbcda3f291")
 		key1, _  = crypto.HexToECDSA("49a7b37aa6f6645917e7b807e9d1c00d4fa71f18343b0d4122a4d2df64dd6fee")
@@ -208,7 +210,14 @@ func TestConvert(t *testing.T) {
 	}
 	ethereumDB := NewEthereumDatabase(memDb)
 	turboDB := NewTurboDatabase(*boltDB)
-	_, _, err = ConvertSnapshot(ethereumDB, turboDB, nil, 1000, 7)
+	mut := turboDB.db.NewBatch()
+	rawDB := rawdb.NewDatabase(ethereumDB.db)
+	trieDB := trie.NewDatabase(ethereumDB.db)
+	blockTrie, root, _ := newStateTrie(ethereumDB, 7)
+	iterator := trie.NewIterator(blockTrie.NodeIterator(nil))
+	stateDB, _ := state.New(root, state.NewDatabase(rawDB))
+
+	_, err = ConvertSnapshot(ethereumDB, turboDB, iterator, 1000, trieDB, stateDB, blockTrie, mut)
 	if err != nil {
 		t.Error(err)
 	}

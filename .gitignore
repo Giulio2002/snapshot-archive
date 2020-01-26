@@ -2,4 +2,5 @@ vendor/
 bin/
 out
 test/
+def/
 FLOCK
