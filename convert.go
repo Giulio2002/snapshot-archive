@@ -95,7 +95,7 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Ite
 		}
 	}
 	_, err := mut.Commit()
-	fmt.Printf("%d entries has just been written", counter)
+	fmt.Printf("%d entries has just been written\n", counter)
 	return counter, err
 }
 
