@@ -71,21 +71,21 @@ func main() {
 		log.Error("Could not retrieve state trie", "err", err.Error())
 		return
 	}
-	iterator := trie.NewIterator(t.NodeIterator(nil))
 	stateDB, err := state.New(root, state.NewDatabase(rawDB))
 	if err != nil {
 		log.Info("Could not retrieve state trie", "err", err.Error())
 		return
 	}
 
-	written, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
+	written, start, err := ConvertSnapshot(leveldDB, boltDB, []byte{}, *max, trieDB, stateDB, t, mut)
 	if err != nil {
 		log.Info("Written", "entries", written)
 		log.Error("Convert Operation Failed", "err", err.Error())
 		return
 	}
-	for iterator.Key != nil {
-		wrote, err := ConvertSnapshot(leveldDB, boltDB, iterator, *max, trieDB, stateDB, t, mut)
+	for start != nil {
+		wrote, newStart, err := ConvertSnapshot(leveldDB, boltDB, start, *max, trieDB, stateDB, t, mut)
+		start = newStart
 		written += wrote
 		if err != nil {
 			log.Info("Written", "entries", written)
