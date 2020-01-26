@@ -31,11 +31,6 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Ite
 		gethAccount := state.Account{} // go-ethereum account
 		var tAccount accounts.Account  // turbo-geth account
 
-		if counter > maxOperationsPerTransaction {
-			_, err := mut.Commit()
-			return counter, err
-		}
-
 		// setup account
 		tAccount.Nonce = gethAccount.Nonce
 		if gethAccount.Balance != nil {
@@ -91,6 +86,11 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Ite
 		err = mut.Put(dbutils.AccountsBucket, iterator.Key, bytesAccount)
 		if err != nil {
 			_, _ = mut.Commit()
+			return counter, err
+		}
+
+		if counter > maxOperationsPerTransaction {
+			_, err := mut.Commit()
 			return counter, err
 		}
 	}
