@@ -91,6 +91,7 @@ func ConvertSnapshot(from EthereumDatabase, to TurboDatabase, iterator *trie.Ite
 
 		if counter > maxOperationsPerTransaction {
 			_, err := mut.Commit()
+			log.Info("entries has just been written", "entries", counter)
 			return counter, err
 		}
 	}
